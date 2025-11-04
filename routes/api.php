@@ -27,6 +27,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::prefix('v1')->group(function () {
     Route::get('comptes', [CompteController::class, 'index']);
+    Route::post('comptes', [CompteController::class, 'store']);
 });
 
 

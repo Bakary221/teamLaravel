@@ -3,10 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Compte;
+use App\Models\Client;
+use App\Models\User;
 use App\Http\Resources\CompteResource;
+use App\Http\Requests\CreateCompteRequest;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class CompteController extends Controller
 {
@@ -35,5 +41,98 @@ class CompteController extends Controller
         } catch (\Exception $e) {
             return $this->errorResponse('Erreur lors de la récupération des comptes', 500);
         }
+    }
+
+    /**
+     * Créer un nouveau compte bancaire.
+     */
+    public function store(CreateCompteRequest $request): JsonResponse
+    {
+        DB::beginTransaction();
+
+        try {
+            // Validation des données
+            $validatedData = $request->validated();
+            $data = $validatedData;
+
+            // Vérifier si le client existe
+            $client = null;
+            if (!empty($data['client']['id'])) {
+                $client = Client::find($data['client']['id']);
+                if (!$client) {
+                    return $this->errorResponse('Client non trouvé', 404);
+                }
+            } else {
+                // Créer un nouvel utilisateur
+                $user = new User();
+                $user->id = Str::uuid();
+                $user->nom = explode(' ', $data['client']['titulaire'])[0] ?? $data['client']['titulaire'];
+                $user->prenom = explode(' ', $data['client']['titulaire'])[1] ?? '';
+                $user->login = $data['client']['email'];
+                $user->email = $data['client']['email'];
+                $user->telephone = $data['client']['telephone'];
+                $user->status = 'Actif';
+                $user->cni = $data['client']['nci'];
+                $user->code = Str::random(6);
+                $user->sexe = 'Homme'; // Par défaut
+                $user->role = 'Client';
+                $user->is_verified = 1;
+                $user->date_naissance = now()->subYears(25)->format('Y-m-d'); // Par défaut
+                $user->password = Hash::make(Str::random(12)); // Générer un mot de passe aléatoire
+                $user->save();
+
+                // Créer le client
+                $client = new Client();
+                $client->id = Str::uuid();
+                $client->user_id = $user->id;
+                $client->profession = $data['client']['profession'] ?? 'Non spécifiée';
+                $client->save();
+
+            }
+
+            // Générer un numéro de compte unique
+            $numeroCompte = $this->generateNumeroCompte();
+
+            // Créer le compte
+            $compte = new Compte();
+            $compte->id = Str::uuid();
+            $compte->client_id = $client->id;
+            $compte->numero_compte = $numeroCompte;
+            $compte->type = $data['type'];
+            $compte->statut = 'actif';
+            $compte->motif_blocage = null;
+            $compte->save();
+
+            // Créer une transaction de dépôt initial
+            $compte->transactions()->create([
+                'type' => 'depot',
+                'montant' => $data['soldeInitial'],
+                'destinataire_id' => $compte->id, // Même compte pour les dépôts
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Compte créé avec succès',
+                'data' => new CompteResource($compte),
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse('Erreur lors de la création du compte: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Générer un numéro de compte unique.
+     */
+    private function generateNumeroCompte(): string
+    {
+        do {
+            $numero = 'C' . str_pad(mt_rand(1, 99999999), 8, '0', STR_PAD_LEFT);
+        } while (Compte::where('numero_compte', $numero)->exists());
+
+        return $numero;
     }
 }

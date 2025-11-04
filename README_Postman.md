@@ -10,7 +10,7 @@ Ce guide explique comment utiliser l'API Laravel avec Postman pour tester les en
 
 ## Configuration de base
 
-- **URL de base** : `http://localhost:8000/api` (ajustez selon votre configuration).
+- **URL de base** : `http://127.0.0.1:8001/api` (ajustez selon votre configuration).
 - **Version de l'API** : v1 (préfixe `/v1`).
 
 ## Authentification
@@ -31,7 +31,7 @@ Notez l'ID du client et le secret.
 
 1. Ouvrez Postman et créez une nouvelle requête.
 2. Méthode : `POST`
-3. URL : `http://localhost:8000/api/oauth/token`
+3. URL : `http://127.0.0.1:8001/api/oauth/token`
 4. Headers :
    - `Content-Type: application/json`
    - `Accept: application/json`
@@ -69,17 +69,19 @@ Pour les endpoints authentifiés, ajoutez le header :
     "message": "Comptes récupérés avec succès",
     "data": [
       {
-        "id": 1,
-        "numero_compte": "123456789",
+        "id": "uuid-du-compte",
+        "numeroCompte": "C123456789",
+        "titulaire": "Dupont Jean",
+        "type": "cheque",
         "solde": 1500.00,
-        "client": {
-          "nom": "Dupont",
-          "prenom": "Jean",
-          "user": {
-            "email": "jean.dupont@example.com"
-          }
-        },
-        "transactions": [...]
+        "devise": "FCFA",
+        "dateCreation": "2025-11-04T08:00:00.000000Z",
+        "statut": "actif",
+        "motifBlocage": null,
+        "metadata": {
+          "derniereModification": "2025-11-04T08:00:00.000000Z",
+          "version": 1
+        }
       }
     ],
     "pagination": {
@@ -91,11 +93,59 @@ Pour les endpoints authentifiés, ajoutez le header :
   }
   ```
 
+### 2. Créer un compte (POST /api/v1/comptes)
+
+- **Méthode** : POST
+- **URL** : `http://127.0.0.1:8001/api/v1/comptes`
+- **Authentification** : Requise (Bearer Token)
+- **Headers** :
+  - `Content-Type: application/json`
+- **Corps de la requête** :
+  ```json
+  {
+    "type": "cheque",
+    "soldeInitial": 15000,
+    "devise": "FCFA",
+    "solde": 15000,
+    "client": {
+      "id": "uuid-client-existant", // Optionnel, si non fourni, un nouveau client sera créé
+      "titulaire": "John Doe",
+      "nci": "AB123456789",
+      "email": "john@example.com",
+      "telephone": "771234567",
+      "adresse": "Dakar, Senegal",
+      "profession": "Developpeur"
+    }
+  }
+  ```
+- **Exemple de réponse** :
+  ```json
+  {
+    "success": true,
+    "message": "Compte créé avec succès",
+    "data": {
+      "id": "uuid-du-compte",
+      "numeroCompte": "C123456789",
+      "titulaire": "John Doe",
+      "type": "cheque",
+      "solde": 15000,
+      "devise": "FCFA",
+      "dateCreation": "2025-11-04T08:00:00.000000Z",
+      "statut": "actif",
+      "motifBlocage": null,
+      "metadata": {
+        "derniereModification": "2025-11-04T08:00:00.000000Z",
+        "version": 1
+      }
+    }
+  }
+  ```
+
 ### Étapes dans Postman
 
 1. Créez une nouvelle requête.
 2. Sélectionnez la méthode GET.
-3. Entrez l'URL : `http://localhost:8000/api/v1/comptes`
+3. Entrez l'URL : `http://127.0.0.1:8001/api/v1/comptes`
 4. Dans l'onglet "Authorization", choisissez "Bearer Token" et collez votre `access_token`.
 5. Ajoutez des paramètres de requête si nécessaire (ex. `?limit=5`).
 6. Cliquez sur "Send".
