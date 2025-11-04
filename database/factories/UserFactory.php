@@ -36,7 +36,7 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'date_naissance' => fake()->date(),
             'role' => fake()->randomElement(['Admin', 'Client']),
-            'is_verified' => fake()->boolean(),
+            'is_verified' => 1,
         ];
     }
 

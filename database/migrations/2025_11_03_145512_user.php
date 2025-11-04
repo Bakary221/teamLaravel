@@ -11,23 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('users');
-        Schema::create('users', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('nom');
-            $table->string('prenom');
-            $table->string('login');
-            $table->string('telephone')->unique();
-            $table->enum('status', ['Actif', 'Inactif']);
-            $table->string('cni');
-            $table->string('code');
-            $table->enum('sexe', ['Homme', 'Femme']);
-            $table->enum('role', ['Admin', 'Client']);
-            $table->boolean('is_verified');
-            $table->date('date_naissance');
-            $table->string('password');
-            $table->timestamps();
-        });
+        // Cette migration n'est plus nécessaire car la table users est créée directement avec les bonnes colonnes
     }
 
     /**

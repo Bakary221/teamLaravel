@@ -16,12 +16,14 @@ class TransactionFactory extends Factory
      */
     public function definition(): array
     {
+        $type = fake()->randomElement(['depot', 'retrait', 'transfert']);
+        $compteId = \App\Models\Compte::factory()->create()->id;
+
         return [
-            'id' => (string) \Illuminate\Support\Str::uuid(),
-            'compte_id' => \App\Models\Compte::factory(),
-            'type' => fake()->randomElement(['Depot', 'Retrait', 'Transfert']),
+            'compte_id' => $compteId,
+            'type' => $type,
             'montant' => fake()->randomFloat(2, 100, 10000),
-            'destinataire_id' => fake()->optional()->randomElement(\App\Models\Compte::pluck('id')->toArray()),
+            'destinataire_id' => $type === 'transfert' ? \App\Models\Compte::where('id', '!=', $compteId)->inRandomOrder()->first()->id ?? $compteId : $compteId,
         ];
     }
 }

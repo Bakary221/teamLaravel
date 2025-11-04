@@ -8,6 +8,7 @@ use Laravel\Passport\Http\Controllers\AuthorizationController;
 use Laravel\Passport\Http\Controllers\DenyAuthorizationController;
 use Laravel\Passport\Http\Controllers\PersonalAccessTokenController;
 use Laravel\Passport\Http\Controllers\TransientTokenController;
+use App\Http\Controllers\CompteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +24,50 @@ use Laravel\Passport\Http\Controllers\TransientTokenController;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::prefix('v1')->group(function () {
+    Route::get('comptes', [CompteController::class, 'index']);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Route::prefix('oauth')->group(function () {
     Route::post('/token', [AccessTokenController::class, 'issueToken'])

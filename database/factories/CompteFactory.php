@@ -20,8 +20,8 @@ class CompteFactory extends Factory
             'id' => (string) \Illuminate\Support\Str::uuid(),
             'client_id' => \App\Models\Client::factory(),
             'numero_compte' => fake()->unique()->bothify('##########'),
-            'type' => fake()->randomElement(['Courant', 'Epargne']),
-            'statut' => fake()->randomElement(['Actif', 'Bloque']),
+            'type' => fake()->randomElement(['cheque', 'epargne']),
+            'statut' => fake()->randomElement(['actif', 'inactif', 'bloqué']),
             'motif_blocage' => fake()->optional()->sentence(),
         ];
     }
