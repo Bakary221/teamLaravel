@@ -1,0 +1,35 @@
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            // Supprimer les colonnes existantes
+            $table->dropColumn(['name', 'email', 'email_verified_at', 'password', 'remember_token']);
+
+            // Ajouter de nouveaux attributs
+            $table->string('username')->unique();
+            $table->string('role');
+            $table->boolean('is_active')->default(true);
+            $table->date('birthdate')->nullable();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            // Supprimer les nouveaux attributs
+            $table->dropColumn(['username', 'role', 'is_active', 'birthdate']);
+
+            // Restaurer les anciennes colonnes
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            $table->rememberToken();
+        });
+    }
+};
