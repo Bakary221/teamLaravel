@@ -18,6 +18,8 @@ return new class extends Migration
             $table->enum('type', ['cheque', 'epargne']);
             $table->enum('statut', ['actif', 'inactif', 'bloqué','fermé']);
             $table->string('motif_blocage')->nullable();
+            $table->timestamp('date_fermeture')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

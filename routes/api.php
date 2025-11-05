@@ -29,6 +29,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     Route::get('comptes', [CompteController::class, 'index']);
     Route::post('comptes', [CompteController::class, 'store']);
     Route::patch('comptes/{compteId}', [CompteController::class, 'update']);
+    Route::delete('comptes/{compte}', [CompteController::class, 'destroy']);
 });
 
 
