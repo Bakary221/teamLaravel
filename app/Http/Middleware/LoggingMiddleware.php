@@ -16,15 +16,16 @@ class LoggingMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Logger l'opération avant traitement
-        Log::info('Operation logged', [
-            'timestamp' => now(),
-            'host' => $request->getHost(),
-            'operation' => $request->method() . ' ' . $request->path(), // Ex. : PATCH /api/v1/comptes/{id}
-            'resource' => $request->route('compteId') ?? 'N/A', // ID du compte
-            'user_id' => auth()->id() ?? 'N/A', // Utilisateur connecté
+        $start = microtime(true);
+        $response = $next($request);
+        $duration = round((microtime(true) - $start) * 1000, 2);
+        Log::info('API Request', [
+            'user' => optional($request->user())->id,
+            'method' => $request->method(),
+            'url' => $request->fullUrl(),
+            'status' => $response->getStatusCode(),
+            'duration_ms' => $duration,
         ]);
-
-        return $next($request);
+        return $response;
     }
 }

@@ -24,6 +24,10 @@ class UserFactory extends Factory
     public function definition(): array
     {
         $email = fake()->unique()->safeEmail();
+        $role = fake()->randomElement(['admin', 'client']);
+        $permissions = $role === 'admin'
+            ? ['compte:read', 'compte:write', 'transaction:read', 'admin:read', 'admin:write']
+            : ['compte:read', 'compte:write', 'transaction:read'];
         return [
             'id' => Str::uuid(),
             'nom' => fake()->name(),
@@ -34,12 +38,32 @@ class UserFactory extends Factory
             'code' => fake()->bothify('??##??##'),
             'sexe' => fake()->randomElement(['Homme', 'Femme']),
             'login' => $email,
-            'email' => $email,
             'password' => static::$password ??= Hash::make('password'),
             'date_naissance' => fake()->date(),
-            'role' => fake()->randomElement(['Admin', 'Client']),
+            'role' => $role,
+            'permissions' => $permissions,
             'is_verified' => 1,
         ];
+    }
+
+    public function admin()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'role' => 'admin',
+                'permissions' => ['compte:read', 'compte:write', 'transaction:read', 'admin:read', 'admin:write'],
+            ];
+        });
+    }
+
+    public function client()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'role' => 'client',
+                'permissions' => ['compte:read', 'compte:write', 'transaction:read'],
+            ];
+        });
     }
 
     /**

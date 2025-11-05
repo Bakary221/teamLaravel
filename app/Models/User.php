@@ -26,7 +26,6 @@ class User extends Authenticatable
         'nom',
         'prenom',
         'login',
-        'email',
         'password',
         'telephone',
         'status',
@@ -36,6 +35,8 @@ class User extends Authenticatable
         'role',
         'is_verified',
         'date_naissance',
+        'role', 
+        'permissions',
 
     ];
     
@@ -49,6 +50,16 @@ class User extends Authenticatable
     {
         return $this->hasOne(Client::class);
     }
+
+
+    public function hasPermission(string $permission): bool {
+        return in_array($permission, $this->permissions ?? []);
+    }
+
+    public function hasRole(string $role): bool {
+        return $this->role === $role;
+    }
+
 
 
     /**
@@ -69,5 +80,6 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'permissions'=>'array'
     ];
 }

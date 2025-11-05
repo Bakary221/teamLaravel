@@ -18,9 +18,9 @@ return new class extends Migration
             $table->string('secret', 100)->nullable();
             $table->string('provider')->nullable();
             $table->text('redirect');
-            $table->boolean('personal_access_client');
-            $table->boolean('password_client');
-            $table->boolean('revoked');
+            $table->integer('personal_access_client');
+            $table->integer('password_client');
+            $table->integer('revoked');
             $table->timestamps();
         });
     }

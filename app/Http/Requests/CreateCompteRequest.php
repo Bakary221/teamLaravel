@@ -24,20 +24,37 @@ class CreateCompteRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'type' => 'required|in:cheque,epargne',
             'soldeInitial' => 'required|numeric|min:10000',
             'devise' => 'required|string|in:FCFA',
             'solde' => 'required|numeric|min:10000',
             'client' => 'required|array',
             'client.id' => 'nullable|uuid|exists:clients,id',
-            'client.titulaire' => 'required|string|min:2|max:255',
-            'client.nci' => ['required', 'string', new ValidNciSenegal()],
-            'client.email' => 'required|email|unique:users,email',
-            'client.telephone' => ['required', 'string', new ValidTelephoneSenegal(), 'unique:users,telephone'],
-            'client.adresse' => 'required|string|min:5|max:500',
             'client.profession' => 'nullable|string|max:255',
         ];
+
+        if (!$this->input('client.id')) {
+            // Si aucun client.id n'est fourni, les champs client sont requis pour créer un nouveau client
+            $rules = array_merge($rules, [
+                'client.titulaire' => 'required|string|min:2|max:255',
+                'client.nci' => ['required', 'string', new ValidNciSenegal()],
+                'client.email' => 'required|email|unique:users,email',
+                'client.telephone' => ['required', 'string', new ValidTelephoneSenegal(), 'unique:users,telephone'],
+                'client.adresse' => 'required|string|min:5|max:500',
+            ]);
+        } else {
+            // Si client.id est fourni, les autres champs sont optionnels
+            $rules = array_merge($rules, [
+                'client.titulaire' => 'nullable|string|min:2|max:255',
+                'client.nci' => 'nullable|string',
+                'client.email' => 'nullable|email',
+                'client.telephone' => 'nullable|string',
+                'client.adresse' => 'nullable|string|min:5|max:500',
+            ]);
+        }
+
+        return $rules;
     }
 
     /**

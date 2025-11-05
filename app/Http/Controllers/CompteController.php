@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class CompteController extends Controller
@@ -25,6 +26,9 @@ class CompteController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        Gate::authorize('can-access-bank-operations');
+        $this->authorize('viewAny', Compte::class);
+
         try {
             // Validation des paramètres de requête
             $validated = $request->validate([
@@ -64,6 +68,8 @@ class CompteController extends Controller
      */
     public function store(CreateCompteRequest $request): JsonResponse
     {
+        $this->authorize('create', Compte::class);
+
         DB::beginTransaction();
 
         try {
@@ -78,7 +84,7 @@ class CompteController extends Controller
                     DB::rollBack();
                     return $this->errorResponse('Client spécifié non trouvé dans le système', 404);
                 }
-            } else {
+            } elseif (!empty($data['client']['titulaire'])) {
                 // Créer un nouvel utilisateur
                 try {
                     $user = new User();
@@ -86,13 +92,14 @@ class CompteController extends Controller
                     $user->nom = explode(' ', $data['client']['titulaire'])[0] ?? $data['client']['titulaire'];
                     $user->prenom = explode(' ', $data['client']['titulaire'])[1] ?? '';
                     $user->login = $data['client']['email'];
-                    $user->email = $data['client']['email'];
                     $user->telephone = $data['client']['telephone'];
+                    $user->permissions = json_encode(['compte:read', 'compte:write', 'transaction:read']); // Encoder en JSON
                     $user->status = 'Actif';
                     $user->cni = $data['client']['nci'];
                     $user->code = Str::random(6);
                     $user->sexe = 'Homme'; // Par défaut
-                    $user->role = 'Client';
+                    $user->role = 'client'; // Minuscule pour respecter la contrainte enum
+                    $user->permissions = ['compte:read', 'compte:write', 'transaction:read']; // Permissions par défaut
                     $user->is_verified = 1;
                     $user->date_naissance = now()->subYears(25)->format('Y-m-d'); // Par défaut
                     $user->password = Hash::make(Str::random(12)); // Générer un mot de passe aléatoire
@@ -189,6 +196,8 @@ class CompteController extends Controller
                 return $this->errorResponse('Compte non trouvé', 404);
             }
 
+            $this->authorize('update', $compte);
+
             $client = $compte->client;
             if (!$client) {
                 return $this->errorResponse('Client associé au compte non trouvé', 404);
@@ -282,6 +291,8 @@ class CompteController extends Controller
                 return $this->errorResponse('Compte non trouvé', 404);
             }
 
+            $this->authorize('delete', $compte);
+
             if ($compte->statut === 'fermé') {
                 return $this->errorResponse('Ce compte est déjà fermé et ne peut pas être supprimé à nouveau', 400);
             }
@@ -314,6 +325,43 @@ class CompteController extends Controller
         } catch (\Exception $e) {
             Log::error('Erreur inattendue lors de la suppression du compte ' . $id . ': ' . $e->getMessage());
             return $this->errorResponse('Erreur interne du serveur lors de la suppression du compte', 500);
+        }
+    }
+
+    /**
+     * Récupérer les transactions d'un compte.
+     */
+    public function transactions(string $compteId): JsonResponse
+    {
+        try {
+            // Validation de l'ID du compte
+            if (!\Illuminate\Support\Str::isUuid($compteId)) {
+                return $this->errorResponse('ID du compte invalide', 400);
+            }
+
+            $compte = Compte::find($compteId);
+            if (!$compte) {
+                return $this->errorResponse('Compte non trouvé', 404);
+            }
+
+            $this->authorize('viewTransactions', $compte);
+
+            // Récupérer les transactions avec pagination
+            $transactions = $compte->transactions()
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
+
+            return $this->paginatedResponse(
+                $transactions,
+                $transactions,
+                'Transactions récupérées avec succès'
+            );
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error('Erreur de base de données lors de la récupération des transactions du compte ' . $compteId . ': ' . $e->getMessage());
+            return $this->errorResponse('Erreur de base de données lors de la récupération des transactions', 500);
+        } catch (\Exception $e) {
+            Log::error('Erreur inattendue lors de la récupération des transactions du compte ' . $compteId . ': ' . $e->getMessage());
+            return $this->errorResponse('Erreur interne du serveur lors de la récupération des transactions', 500);
         }
     }
 

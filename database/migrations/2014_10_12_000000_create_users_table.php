@@ -21,7 +21,8 @@ return new class extends Migration
             $table->string('cni')->unique();
             $table->string('code');
             $table->enum('sexe', ['Homme', 'Femme']);
-            $table->enum('role', ['Admin', 'Client']);
+            $table->enum('role', ['admin', 'client']);
+            $table->json('permissions')->nullable();
             $table->integer('is_verified')->default(0);
             $table->date('date_naissance');
             $table->string('password');

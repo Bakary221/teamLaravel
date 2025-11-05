@@ -1,8 +1,10 @@
 <?php
 
 namespace App\Providers;
-
-// use Illuminate\Support\Facades\Gate;
+use App\Models\Compte;
+use App\Models\Admin;
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -13,8 +15,10 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        //
+        Compte::class => \App\Policies\ComptePolicy::class,
+        Admin::class => \App\Policies\AdminPolicy::class,
     ];
+
 
     /**
      * Register any authentication / authorization services.
@@ -23,7 +27,11 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // Les routes Passport sont automatiquement enregistrées par PassportServiceProvider
-        // Pas besoin d'appeler Passport::routes() dans les versions récentes
+        \Laravel\Passport\Passport::useTokenModel(\App\Models\Token::class);
+
+        Gate::define('is-admin', fn(User $user) => $user->hasRole('admin'));
+        Gate::define('is-client', fn(User $user) => $user->hasRole('client'));
+        Gate::define('has-permission', fn(User $user, string $perm) => $user->hasPermission($perm));
+        Gate::define('can-access-bank-operations', fn(User $u) => $u->hasRole('admin') || $u->hasRole('client'));
     }
 }

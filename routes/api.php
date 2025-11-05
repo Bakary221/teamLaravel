@@ -9,6 +9,9 @@ use Laravel\Passport\Http\Controllers\DenyAuthorizationController;
 use Laravel\Passport\Http\Controllers\PersonalAccessTokenController;
 use Laravel\Passport\Http\Controllers\TransientTokenController;
 use App\Http\Controllers\CompteController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,12 +28,24 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-    Route::prefix('v1')->group(function () {
-    Route::get('comptes', [CompteController::class, 'index']);
-    Route::post('comptes', [CompteController::class, 'store']);
-    Route::patch('comptes/{compteId}', [CompteController::class, 'update']);
-    Route::delete('comptes/{compte}', [CompteController::class, 'destroy']);
+Route::prefix('auth')->group(function () {
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('refresh', [AuthController::class, 'refresh']);
+    Route::middleware('auth:api')->post('logout', [AuthController::class, 'logout']);
 });
+
+    Route::middleware(['auth:api', 'logging'])->prefix('v1')->group(function () {
+        Route::middleware('role:admin')->group(function () {
+            Route::get('admin/dashboard', [AdminController::class, 'dashboard']);
+            Route::apiResource('users', UserController::class);
+        });
+
+        Route::apiResource('comptes', CompteController::class)
+            ->middleware('can:viewAny,App\Models\Compte');
+
+        Route::get('comptes/{compte}/transactions', [CompteController::class, 'transactions'])
+            ->middleware('can:viewTransactions,compte');
+    });
 
 
 
