@@ -25,9 +25,10 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::prefix('v1')->group(function () {
+    Route::prefix('v1')->group(function () {
     Route::get('comptes', [CompteController::class, 'index']);
     Route::post('comptes', [CompteController::class, 'store']);
+    Route::patch('comptes/{compteId}', [CompteController::class, 'update'])->middleware(['auth:api', 'LoggingMiddleware']);
 });
 
 

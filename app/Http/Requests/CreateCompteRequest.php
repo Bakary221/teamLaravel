@@ -6,6 +6,7 @@ use App\Rules\ValidNciSenegal;
 use App\Rules\ValidTelephoneSenegal;
 use Illuminate\Foundation\Http\FormRequest;
 
+// CreateCompteRequest pour valider les données d'entrée lors de la création d'un compte.
 class CreateCompteRequest extends FormRequest
 {
     /**

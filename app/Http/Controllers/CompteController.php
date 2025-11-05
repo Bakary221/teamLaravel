@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\User;
 use App\Http\Resources\CompteResource;
 use App\Http\Requests\CreateCompteRequest;
+use App\Http\Requests\UpdateClientRequest;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -123,6 +124,44 @@ class CompteController extends Controller
             return $this->errorResponse('Erreur lors de la création du compte: ' . $e->getMessage(), 500);
         }
     }
+
+   public function update(UpdateClientRequest $request, string $compteId): JsonResponse
+{
+    try {
+        $compte = Compte::findOrFail($compteId);
+        $client = $compte->client;
+        $user = $client->user;
+
+        // Mettre à jour les champs du User (client)
+        if ($request->has('titulaire')) {
+            $parts = explode(' ', $request->titulaire);
+            $user->nom = $parts[0] ?? $request->titulaire;
+            $user->prenom = $parts[1] ?? '';
+        }
+        if ($request->has('telephone')) {
+            $user->telephone = $request->telephone;
+        }
+        if ($request->has('email')) {
+            $user->email = $request->email;
+            $user->login = $request->email; // Mettre à jour login si email change
+        }
+        if ($request->has('nci')) {
+            $user->cni = $request->nci;
+        }
+        $user->save();
+
+        // Recalculer le solde si nécessaire
+        $compte->solde = $compte->calculerSolde();
+
+        return $this->successResponse(
+            new CompteResource($compte),
+            'Informations du client mises à jour avec succès'
+        );
+    } catch (\Exception $e) {
+        return $this->errorResponse('Erreur lors de la mise à jour: ' . $e->getMessage(), 500);
+    }
+}
+
 
     /**
      * Générer un numéro de compte unique.

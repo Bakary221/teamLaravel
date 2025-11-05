@@ -27,6 +27,7 @@ class Compte extends Model
         });
     }
 
+    // Les relations entre compte et les autres modèles (client, transactions)
     public function client()
     {
         return $this->belongsTo(Client::class);
