@@ -23,6 +23,7 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $email = fake()->unique()->safeEmail();
         return [
             'id' => Str::uuid(),
             'nom' => fake()->name(),
@@ -32,7 +33,8 @@ class UserFactory extends Factory
             'cni' => fake()->unique()->bothify('??##########'),
             'code' => fake()->bothify('??##??##'),
             'sexe' => fake()->randomElement(['Homme', 'Femme']),
-            'login' => fake()->unique()->safeEmail(),
+            'login' => $email,
+            'email' => $email,
             'password' => static::$password ??= Hash::make('password'),
             'date_naissance' => fake()->date(),
             'role' => fake()->randomElement(['Admin', 'Client']),

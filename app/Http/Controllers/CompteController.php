@@ -135,4 +135,31 @@ class CompteController extends Controller
 
         return $numero;
     }
+
+    /**
+     * Supprimer (soft delete) un compte.
+     */
+    public function destroy($id): JsonResponse
+    {
+        try {
+            $compte = Compte::withoutGlobalScopes()->findOrFail($id);
+            if ($compte->statut === 'fermé') {
+                return $this->errorResponse('Ce compte est déjà fermé.', 400);
+            }
+            $compte->statut = 'fermé';
+            $compte->date_fermeture = now();
+            $compte->save();
+            $compte->delete();
+
+            return $this->successResponse([
+                'id' => $compte->id,
+                'numeroCompte' => $compte->numero_compte,
+                'statut' => $compte->statut,
+                'dateFermeture' => $compte->date_fermeture ? $compte->date_fermeture->toISOString() : null,
+            ], 'Compte supprimé avec succès');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erreur lors de la suppression du compte', 500);
+        }
+    }
+
 }
