@@ -23,6 +23,23 @@ class AuthServiceProvider extends ServiceProvider
     /**
      * Register any authentication / authorization services.
      */
+    public function register()
+    {
+        // Enregistrer les repositories
+        $this->app->bind(\App\Repositories\Interfaces\CompteRepositoryInterface::class, \App\Repositories\Eloquent\CompteRepository::class);
+        $this->app->bind(\App\Repositories\Interfaces\UserRepositoryInterface::class, \App\Repositories\Eloquent\UserRepository::class);
+        $this->app->bind(\App\Repositories\Interfaces\ClientRepositoryInterface::class, \App\Repositories\Eloquent\ClientRepository::class);
+
+        // Enregistrer les services
+        $this->app->singleton(\App\Services\CompteService::class, function ($app) {
+            return new \App\Services\CompteService(
+                $app->make(\App\Repositories\Interfaces\CompteRepositoryInterface::class),
+                $app->make(\App\Repositories\Interfaces\UserRepositoryInterface::class),
+                $app->make(\App\Repositories\Interfaces\ClientRepositoryInterface::class)
+            );
+        });
+    }
+
     public function boot()
     {
         $this->registerPolicies();

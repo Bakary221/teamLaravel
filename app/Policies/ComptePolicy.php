@@ -45,6 +45,16 @@ class ComptePolicy
 
     public function viewTransactions(User $user, Compte $compte)
     {
-        return $this->view($user, $compte) && $user->hasPermission('transaction:read');
+        // Admin peut voir toutes les transactions
+        if ($user->hasRole('admin')) {
+            return $user->hasPermission('transaction:read');
+        }
+
+        // Client ne peut voir que ses propres transactions
+        if ($user->hasRole('client') && $user->client) {
+            return $compte->client_id === $user->client->id && $user->hasPermission('transaction:read');
+        }
+
+        return false;
     }
 }

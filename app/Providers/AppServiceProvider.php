@@ -19,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Enregistrer les observers
+        \App\Models\Compte::observe(\App\Observers\CompteObserver::class);
     }
 }

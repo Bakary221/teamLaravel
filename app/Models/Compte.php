@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\CompteScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,11 +23,12 @@ class Compte extends Model
         'date_fermeture',
     ];
 
+    /**
+     * Les scopes globaux du modèle
+     */
     protected static function booted()
     {
-        static::addGlobalScope('nonSupprimes', function (Builder $builder) {
-            $builder->where('statut', '!=', 'fermé');
-        });
+        static::addGlobalScope(new CompteScope());
     }
 
     // Les relations entre compte et les autres modèles (client, transactions)
